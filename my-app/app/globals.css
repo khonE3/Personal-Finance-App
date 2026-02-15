@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    /* Light Mode Palette - Modern Nong Bua Lamphu */
+    --background: 248 250 252; /* slate-50 */
+    --foreground: 30 41 59;    /* slate-800 */
+    
+    --card: 255 255 255;
+    --card-foreground: 30 41 59;
+    
+    --primary: 30 27 75;       /* indigo-950 */
+    --primary-foreground: 224 231 255; /* indigo-100 */
+    
+    --accent: 236 72 153;      /* pink-500 */
+    --accent-foreground: 255 255 255;
+    
+    --border: 226 232 240;     /* slate-200 */
+    --input: 241 245 249;      /* slate-100 */
+  }
+
+  .dark {
+    /* Dark Mode Palette - Midnight Nong Bua Lamphu */
+    --background: 15 23 42;    /* slate-950 (Deep night sky) */
+    --foreground: 226 232 240; /* slate-200 (Moonlight) */
+    
+    --card: 30 41 59;          /* slate-800 */
+    --card-foreground: 241 245 249;
+    
+    --primary: 99 102 241;     /* indigo-500 (Brighter for dark mode) */
+    --primary-foreground: 255 255 255;
+    
+    --accent: 244 114 182;     /* pink-400 (Softer pink) */
+    --accent-foreground: 15 23 42;
+    
+    --border: 51 65 85;        /* slate-700 */
+    --input: 15 23 42;         /* slate-950 */
+  }
+
+  body {
+    @apply bg-[rgb(var(--background))] text-[rgb(var(--foreground))] antialiased transition-colors duration-300;
+    font-family: 'Sarabun', 'Inter', sans-serif;
+  }
+}
