@@ -2,9 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // เปลี่ยนเป็น ชื่อ image ของคุณ
-        DOCKER_IMAGE = 'your-dockerhub-username/nextjs-app'
-        // Credential ID ที่ตั้งใน Jenkins
+        DOCKER_IMAGE = 'gotjitag/personal-finance-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
@@ -15,26 +13,43 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
+        stage('Install Dependencies') {
             steps {
                 script {
                     dir('my-app') {
-                        // Build Docker image using the Dockerfile in my-app directory
-                        // Note: Dockerfile uses oven/bun:1 base image
+                        sh 'curl -fsSL https://bun.sh/install | bash || true'
+                        sh 'export PATH="$HOME/.bun/bin:$PATH" && bun install'
+                    }
+                }
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                script {
+                    dir('my-app') {
+                        sh 'export PATH="$HOME/.bun/bin:$PATH" && bun run lint'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dir('my-app') {
                         sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
                     }
                 }
             }
         }
 
-        stage('Login & Push') {
+        stage('Push to Docker Hub') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                         sh "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                        
-                        // Optional: Push as latest
                         sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
                         sh "docker push ${DOCKER_IMAGE}:latest"
                     }
@@ -45,16 +60,21 @@ pipeline {
         stage('Cleanup') {
             steps {
                 script {
-                    sh "docker rmi ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    sh "docker rmi ${DOCKER_IMAGE}:latest"
+                    sh "docker rmi ${DOCKER_IMAGE}:${BUILD_NUMBER} || true"
+                    sh "docker rmi ${DOCKER_IMAGE}:latest || true"
                 }
             }
         }
     }
-    
+
     post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
         always {
-             // Basic cleanup just in case
             cleanWs()
         }
     }
